@@ -1,0 +1,22 @@
+name: Set Latest Tag
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing tag to mark as latest"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  set-latest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Mark release as latest
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release edit "${{ inputs.tag }}" --latest

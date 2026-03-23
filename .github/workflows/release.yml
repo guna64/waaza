@@ -1,0 +1,51 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag (contoh: v0.1.0)"
+        required: true
+        type: string
+      make_latest:
+        description: "Set as latest release"
+        required: false
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create tag if missing
+        run: |
+          TAG='${{ inputs.tag }}'
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag exists: $TAG"
+          else
+            git tag "$TAG"
+            git push origin "$TAG"
+          fi
+
+      - name: Generate changelog
+        id: changelog
+        uses: mikepenz/release-changelog-builder-action@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          toTag: ${{ inputs.tag }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.tag }}
+          name: ${{ inputs.tag }}
+          body: ${{ steps.changelog.outputs.changelog }}
+          make_latest: ${{ inputs.make_latest && 'true' || 'false' }}
