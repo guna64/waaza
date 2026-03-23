@@ -1,0 +1,25 @@
+[Unit]
+Description=Waaza WhatsApp API Service
+After=network-online.target tailscaled.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/.openclaw/workspace/waaza
+EnvironmentFile=/etc/waaza/waaza.env
+ExecStart=/usr/bin/env bash -lc 'exec /usr/local/go/bin/go run ./cmd/server'
+Restart=always
+RestartSec=3
+TimeoutStopSec=20
+
+# Hardening (safe defaults)
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=false
+ReadWritePaths=/home/ubuntu/.openclaw/workspace/waaza
+
+[Install]
+WantedBy=multi-user.target

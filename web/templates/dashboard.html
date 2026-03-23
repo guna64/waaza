@@ -1,0 +1,220 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{ .title }}</title>
+  <style>
+    :root{--teal:#0ea5a3;--bg:#eef2f6;--card:#fff;--line:#e5e7eb;--text:#0f172a}
+    *{box-sizing:border-box}
+    body{font-family:Inter,system-ui,sans-serif;background:var(--bg);margin:0;color:var(--text)}
+    .top{background:var(--teal);color:#fff;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+    .brand{font-weight:800;line-height:1.1}
+    .tokenbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .tokenbar input,.tokenbar select,.tokenbar button{height:38px;border-radius:10px;border:1px solid #dbe3ec;padding:0 12px}
+    .tokenbar input{min-width:220px}
+    .tokenbar button{border:none;color:#fff;font-weight:700;cursor:pointer}
+    .btn{background:#1d72f3}.btn-red{background:#dc2626}.btn-gray{background:#111827}.btn-green{background:#059669}
+
+    .wrap{max-width:1050px;margin:18px auto;padding:0 14px}
+    .card{background:var(--card);border-radius:14px;box-shadow:0 10px 24px rgba(0,0,0,.08);padding:16px}
+    .muted{font-size:13px;color:#64748b}
+    .row{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:10px;border-bottom:1px solid var(--line);font-size:14px;text-align:left}
+    .pill{padding:3px 9px;border-radius:999px;font-size:12px;font-weight:700}
+    .ok{background:#dcfce7;color:#166534}.no{background:#fee2e2;color:#991b1b}
+    .actions{display:flex;gap:6px;flex-wrap:wrap}
+    button.tbl{border:none;color:#fff;border-radius:8px;padding:7px 10px;cursor:pointer;font-size:12px;font-weight:700}
+
+    .modal{position:fixed;inset:0;background:rgba(2,6,23,.55);display:none;align-items:center;justify-content:center;padding:16px;z-index:50}
+    .modal .box{width:100%;max-width:760px;max-height:90vh;overflow:auto;background:#fff;border-radius:14px}
+    .box .head{background:var(--teal);color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center}
+    .box .body{padding:16px}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .grid2 input{width:100%;padding:10px 12px;border-radius:10px;border:1px solid #d9e0e8}
+
+    .loginGate{position:fixed;inset:0;background:linear-gradient(180deg,#0ea5a3,#0b8f8d);display:flex;align-items:center;justify-content:center;padding:16px;z-index:100}
+    .loginCard{width:100%;max-width:420px;background:#fff;border-radius:16px;padding:18px;box-shadow:0 14px 34px rgba(0,0,0,.22)}
+    .loginCard h2{margin:0 0 8px}.loginCard p{margin:0 0 14px;color:#64748b}
+    .loginCard input,.loginCard select,.loginCard button{width:100%;height:42px;border-radius:10px;border:1px solid #d9e0e8;padding:0 12px;margin-top:10px}
+    .loginCard button{border:none;background:#0ea5a3;color:#fff;font-weight:700;cursor:pointer}
+
+    @media (max-width:760px){
+      .tokenbar input{min-width:160px;flex:1}
+      .grid2{grid-template-columns:1fr}
+      th,td{font-size:12px;padding:8px}
+    }
+  </style>
+</head>
+<body>
+  <div class="loginGate" id="loginGate">
+    <div class="loginCard">
+      <h2>Login Waaza</h2>
+      <p>Masuk dulu untuk buka dashboard.</p>
+      <select id="gateRole"><option value="user">User</option><option value="admin">Admin</option></select>
+      <input id="gateToken" type="password" placeholder="Masukkan Waaza Token" />
+      <button id="gateLogin">Login</button>
+    </div>
+  </div>
+
+  <div class="top">
+    <div class="brand">Waaza<br/>Manager</div>
+    <div class="tokenbar">
+      <select id="role"><option value="user">User</option><option value="admin">Admin</option></select>
+      <input id="token" type="password" placeholder="Waaza Token" />
+      <button id="btnLogin" class="btn-gray">Login</button>
+      <button id="btnLogout" class="btn-red">Logout</button>
+    </div>
+  </div>
+
+  <div class="wrap" id="appWrap" style="display:none">
+    <div class="card">
+      <div class="row">
+        <h3 style="margin:0">Instances Management</h3>
+        <button id="btnOpenAdd" class="btn-green" style="display:none;border:none;color:#fff;border-radius:10px;padding:10px 12px;cursor:pointer;font-weight:700">+ Add Instance</button>
+      </div>
+      <p class="muted" id="subtitle">Daftar instance dan status koneksi/login.</p>
+      <table id="tbl">
+        <thead>
+          <tr><th>ID</th><th>Name</th><th>Connected</th><th>Logged In</th><th>Actions</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="modal" id="addModal">
+    <div class="box">
+      <div class="head"><strong>Add New Instance</strong><button onclick="closeModal()" class="btn-red" style="border:none;color:#fff;border-radius:8px;padding:6px 10px">X</button></div>
+      <div class="body">
+        <div class="grid2">
+          <div><label>Name *</label><input id="name" placeholder="Instance name" /></div>
+          <div><label>Token *</label><input id="itoken" placeholder="Authentication token" /></div>
+          <div><label>Webhook URL</label><input id="webhook" placeholder="https://your-webhook" /></div>
+          <div><label>Events</label><input id="events" placeholder="All atau Message,ReadReceipt" /></div>
+          <div><label>Message History</label><input id="history" type="number" value="0" /></div>
+          <div><label>HMAC Key</label><input id="hmac" placeholder="secret" /></div>
+          <div><label>Proxy URL</label><input id="proxy" placeholder="socks5://user:pass@host:port" /></div>
+          <div><label><input id="proxyOn" type="checkbox" style="width:auto" /> Enable Proxy</label></div>
+          <div><label><input id="s3On" type="checkbox" style="width:auto" /> Enable S3</label></div>
+        </div>
+        <div class="row" style="margin-top:12px; justify-content:flex-end">
+          <button class="btn-gray" style="border:none;color:#fff;border-radius:10px;padding:10px 12px" onclick="closeModal()">Cancel</button>
+          <button class="btn-green" style="border:none;color:#fff;border-radius:10px;padding:10px 12px" id="btnSubmit">Submit</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const qs = (s)=>document.querySelector(s);
+  const modal = qs('#addModal');
+
+  function hdr(role = localStorage.getItem('waaza_role'), token = localStorage.getItem('waaza_token')) {
+    if (role === 'admin') return { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
+    return { 'X-API-Key': token, 'Content-Type': 'application/json' };
+  }
+
+  async function verify(role, token){
+    const res = await fetch('/auth/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({role,token})});
+    const j = await res.json();
+    return {ok:res.ok, data:j};
+  }
+
+  async function doLogin(role, token){
+    if(!token) return alert('Token wajib diisi');
+    const v = await verify(role, token);
+    if(!v.ok) return alert('Login gagal: '+(v.data.error||'invalid token'));
+    localStorage.setItem('waaza_role', role);
+    localStorage.setItem('waaza_token', token);
+    qs('#role').value = role; qs('#token').value = token;
+    qs('#loginGate').style.display='none';
+    qs('#appWrap').style.display='block';
+    qs('#btnOpenAdd').style.display = role === 'admin' ? 'inline-block' : 'none';
+    qs('#subtitle').textContent = role === 'admin' ? 'Admin: melihat semua instance.' : 'User: hanya melihat instance milik sendiri.';
+    await refresh();
+  }
+
+  function logout(){ localStorage.removeItem('waaza_role'); localStorage.removeItem('waaza_token'); location.reload(); }
+
+  function openModal(){ modal.style.display='flex'; }
+  function closeModal(){ modal.style.display='none'; }
+  window.closeModal = closeModal;
+
+  async function refresh(){
+    const role = localStorage.getItem('waaza_role');
+    if(!role) return;
+    const url = role === 'admin' ? '/admin/instances' : '/instances/me';
+    const res = await fetch(url, { headers: hdr() });
+    const j = await res.json();
+    const tbody = qs('#tbl tbody'); tbody.innerHTML='';
+    (j.data||[]).forEach(it=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=`
+        <td>${it.id}</td>
+        <td>${it.name}</td>
+        <td><span class='pill ${it.connected?'ok':'no'}'>${it.connected?'Yes':'No'}</span></td>
+        <td><span class='pill ${it.logged_in?'ok':'no'}'>${it.logged_in?'Yes':'No'}</span></td>
+        <td><div class='actions'>
+          <button class='tbl btn-gray' onclick="openInstance('${it.id}')">Open</button>
+          ${role==='admin' ? `<button class='tbl btn-red' onclick="delInstance('${it.id}')">Delete</button>` : ''}
+        </div></td>`;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function openInstance(id){ location.href = `/dashboard/instance/${id}`; }
+  window.openInstance = openInstance;
+
+  async function delInstance(id){
+    if(!confirm('Delete instance?')) return;
+    const res = await fetch('/admin/instances/'+id, { method:'DELETE', headers: hdr('admin', localStorage.getItem('waaza_token')) });
+    const j = await res.json();
+    if(!res.ok) return alert(j.error||'gagal delete');
+    refresh();
+  }
+  window.delInstance = delInstance;
+
+  async function createInstance(){
+    const payload = {
+      name: qs('#name').value,
+      token: qs('#itoken').value,
+      webhook: qs('#webhook').value,
+      events: (qs('#events').value||'All').split(',').map(s=>s.trim()).filter(Boolean),
+      history: parseInt(qs('#history').value||'0',10),
+      hmac_key: qs('#hmac').value,
+      proxy_url: qs('#proxy').value,
+      proxy_enabled: qs('#proxyOn').checked,
+      s3_enabled: qs('#s3On').checked,
+    };
+    const res = await fetch('/admin/instances', { method:'POST', headers: hdr('admin', localStorage.getItem('waaza_token')), body: JSON.stringify(payload) });
+    const j = await res.json();
+    if(!res.ok) return alert(j.error||'gagal create');
+    closeModal();
+    refresh();
+  }
+
+  qs('#btnOpenAdd').onclick=openModal;
+  qs('#btnSubmit').onclick=createInstance;
+  qs('#btnLogin').onclick=()=>doLogin(qs('#role').value, qs('#token').value.trim());
+  qs('#btnLogout').onclick=logout;
+  qs('#gateLogin').onclick=()=>doLogin(qs('#gateRole').value, qs('#gateToken').value.trim());
+
+  (async function boot(){
+    const role = localStorage.getItem('waaza_role');
+    const token = localStorage.getItem('waaza_token');
+    if(role && token){
+      const v = await verify(role, token);
+      if(v.ok){
+        await doLogin(role, token);
+        return;
+      }
+    }
+    qs('#loginGate').style.display='flex';
+    qs('#appWrap').style.display='none';
+  })();
+</script>
+</body>
+</html>

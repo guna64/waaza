@@ -1,0 +1,273 @@
+openapi: 3.0.3
+info:
+  title: Waaza API
+  version: 1.1.0
+  description: REST API wrapper untuk WhatsApp (whatsmeow-ready) dengan role User/Admin.
+servers:
+  - url: /
+security:
+  - ApiKeyAuth: []
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+    AdminAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+  schemas:
+    ApiResponse:
+      type: object
+      properties:
+        code: { type: integer, example: 200 }
+        success: { type: boolean, example: true }
+        data: { type: object, additionalProperties: true }
+paths:
+  /health:
+    get:
+      tags: [System]
+      security: []
+      summary: Health check
+      responses: { '200': { description: OK } }
+
+  /auth/verify:
+    post:
+      tags: [Auth]
+      security: []
+      summary: Verify token by role (dashboard login)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token, role]
+              properties:
+                token: { type: string }
+                role: { type: string, enum: [user, admin] }
+      responses:
+        '200': { description: Valid }
+        '401': { description: Invalid token }
+
+  /session/status:
+    get:
+      tags: [Session]
+      summary: Status koneksi dan login
+      security: [{ ApiKeyAuth: [] }]
+      responses: { '200': { description: Status } }
+  /session/connect:
+    post:
+      tags: [Session]
+      summary: Connect
+      security: [{ ApiKeyAuth: [] }]
+      responses: { '200': { description: Connected } }
+  /session/disconnect:
+    post:
+      tags: [Session]
+      summary: Disconnect
+      security: [{ ApiKeyAuth: [] }]
+      responses: { '200': { description: Disconnected } }
+  /session/logout:
+    post:
+      tags: [Session]
+      summary: Logout
+      security: [{ ApiKeyAuth: [] }]
+      responses: { '200': { description: Logged out } }
+  /session/qr:
+    get:
+      tags: [Session]
+      summary: Get QR
+      security: [{ ApiKeyAuth: [] }]
+      responses: { '200': { description: QR } }
+
+  /webhook:
+    get:
+      tags: [Webhook]
+      summary: Get webhook
+      security: [{ ApiKeyAuth: [] }]
+      responses: { '200': { description: OK } }
+    post:
+      tags: [Webhook]
+      summary: Set webhook
+      security: [{ ApiKeyAuth: [] }]
+      responses: { '200': { description: OK } }
+    delete:
+      tags: [Webhook]
+      summary: Delete webhook
+      security: [{ ApiKeyAuth: [] }]
+      responses: { '200': { description: OK } }
+
+  /chat/send/text:
+    post:
+      tags: [Chat]
+      summary: Send text
+      security: [{ ApiKeyAuth: [] }]
+      responses: { '200': { description: Sent } }
+  /chat/send/image:
+    post:
+      tags: [Chat]
+      summary: Send image
+      security: [{ ApiKeyAuth: [] }]
+      responses: { '200': { description: Sent } }
+  /chat/send/document:
+    post:
+      tags: [Chat]
+      summary: Send document
+      security: [{ ApiKeyAuth: [] }]
+      responses: { '200': { description: Sent } }
+
+  /admin/users:
+    get:
+      tags: [Admin]
+      summary: List users
+      security: [{ AdminAuth: [] }]
+      responses: { '200': { description: OK } }
+    post:
+      tags: [Admin]
+      summary: Create user
+      security: [{ AdminAuth: [] }]
+      responses: { '201': { description: Created } }
+  /admin/users/{id}:
+    delete:
+      tags: [Admin]
+      summary: Delete user
+      security: [{ AdminAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses: { '200': { description: Deleted } }
+
+
+  /admin/instances:
+    get:
+      tags: [Admin]
+      summary: List instances
+      security: [{ AdminAuth: [] }]
+      responses: { '200': { description: OK } }
+    post:
+      tags: [Admin]
+      summary: Create instance
+      security: [{ AdminAuth: [] }]
+      responses: { '201': { description: Created } }
+
+  /admin/instances/{id}:
+    get:
+      tags: [Admin]
+      summary: Get instance detail
+      security: [{ AdminAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses: { '200': { description: OK } }
+    delete:
+      tags: [Admin]
+      summary: Delete instance
+      security: [{ AdminAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses: { '200': { description: Deleted } }
+
+  /admin/instances/{id}/session/connect:
+    post:
+      tags: [Admin]
+      summary: Mark/connect instance session
+      security: [{ AdminAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses: { '200': { description: OK } }
+
+  /admin/instances/{id}/session/disconnect:
+    post:
+      tags: [Admin]
+      summary: Mark/disconnect instance session
+      security: [{ AdminAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses: { '200': { description: OK } }
+
+  /admin/instances/{id}/session/logout:
+    post:
+      tags: [Admin]
+      summary: Logout instance session
+      security: [{ AdminAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses: { '200': { description: OK } }
+
+  /admin/instances/{id}/config/webhook:
+    post:
+      tags: [Admin]
+      summary: Set webhook/events config
+      security: [{ AdminAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses: { '200': { description: OK } }
+
+  /admin/instances/{id}/config/history:
+    post:
+      tags: [Admin]
+      summary: Set message history config
+      security: [{ AdminAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses: { '200': { description: OK } }
+
+  /admin/instances/{id}/config/proxy:
+    post:
+      tags: [Admin]
+      summary: Set proxy config
+      security: [{ AdminAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses: { '200': { description: OK } }
+
+  /admin/instances/{id}/config/s3:
+    post:
+      tags: [Admin]
+      summary: Set s3 config
+      security: [{ AdminAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses: { '200': { description: OK } }
+
+  /admin/instances/{id}/config/hmac:
+    post:
+      tags: [Admin]
+      summary: Set hmac key
+      security: [{ AdminAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses: { '200': { description: OK } }

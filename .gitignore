@@ -1,0 +1,12 @@
+/bin/
+/dist/
+.env
+*.env
+*.log
+*.db
+waaza.db
+*.sqlite
+*.sqlite3
+/tmp/
+secrets/
+deploy/.postgres-created.txt

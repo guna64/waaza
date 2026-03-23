@@ -1,0 +1,244 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{ .title }}</title>
+  <style>
+    :root{--teal:#0ea5a3;--bg:#eef2f6;--card:#fff;--line:#e5e7eb;--txt:#0f172a}
+    *{box-sizing:border-box}
+    body{font-family:Inter,system-ui,sans-serif;background:var(--bg);margin:0;color:var(--txt)}
+    .top{background:var(--teal);color:#fff;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+    .wrap{max-width:1050px;margin:14px auto;padding:0 12px}
+    .card{background:var(--card);border:1px solid #dce3eb;border-radius:14px;padding:14px;box-shadow:0 8px 20px rgba(0,0,0,.06);margin-bottom:12px}
+    .head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}
+    .muted{font-size:12px;color:#64748b}
+    .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .btn{border:none;border-radius:9px;padding:9px 12px;color:#fff;font-weight:700;cursor:pointer;font-size:13px}
+    .g{background:#10b981}.d{background:#0f172a}.r{background:#ef4444}.b{background:#2563eb}
+    .pill{padding:3px 8px;border-radius:999px;font-size:11px;font-weight:700}
+    .ok{background:#dcfce7;color:#166534}.no{background:#fee2e2;color:#991b1b}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .box{border:1px solid var(--line);border-radius:12px;padding:10px;background:#fafafa}
+    .box h4{margin:0 0 6px;font-size:14px}
+    input,textarea{width:100%;border:1px solid #d7dfe9;border-radius:8px;padding:8px 10px;font-size:13px}
+    textarea{min-height:72px;resize:vertical}
+    .section{margin-top:8px;padding-top:8px;border-top:1px dashed #d8e0ea}
+    .tag{display:inline-block;background:#eef2ff;color:#3730a3;border-radius:6px;padding:2px 6px;font-size:10px;font-weight:700}
+    #qrcode{display:flex;justify-content:center;min-height:230px;align-items:center;background:#fff;border:1px solid #e5e7eb;border-radius:10px}
+    #log{background:#0b1220;color:#dce7ff;border-radius:10px;padding:8px;min-height:62px;font-size:12px;overflow:auto}
+    @media (max-width: 860px){.grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="top">
+    <strong>Waaza Manager</strong>
+    <button class="btn d" onclick="location.href='/dashboard'">Go Back</button>
+  </div>
+
+  <div class="wrap">
+    <div class="card">
+      <div class="head">
+        <div>
+          <h3 id="name" style="margin:0">Instance</h3>
+          <div id="meta" class="muted">Loading...</div>
+          <div class="row" style="margin-top:6px">
+            <span id="connected" class="pill no">Disconnected</span>
+            <span id="logged" class="pill no">Logged Out</span>
+          </div>
+        </div>
+        <div class="row">
+          <button class="btn g" onclick="action('connect')">Connect</button>
+          <button class="btn d" onclick="action('disconnect')">Disconnect</button>
+          <button class="btn r" onclick="action('logout')">Logout</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h4 style="margin:0 0 8px">QR Login <span class="tag">PAIRING</span></h4>
+        <div id="qrcode"><span class="muted">QR akan muncul di sini</span></div>
+        <div class="row" style="justify-content:space-between;margin-top:8px">
+          <span class="muted">WhatsApp > Linked Devices > Link a Device</span>
+          <button class="btn d" onclick="refreshQR()">Refresh QR</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h4 style="margin:0 0 8px">Quick Test <span class="tag">CHAT</span></h4>
+        <label class="muted">Nomor tujuan (62xxxx tanpa +)</label>
+        <input id="to" placeholder="62812xxxx" />
+        <label class="muted" style="margin-top:8px;display:block">Pesan</label>
+        <textarea id="msg" placeholder="Tes pesan dari dashboard"></textarea>
+        <button class="btn b" style="margin-top:8px;width:100%" onclick="sendText()">Send Text Message</button>
+        <div class="section">
+          <div id="log">ready.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h4 style="margin:0 0 8px">Configuration</h4>
+      <div class="grid">
+        <div class="box">
+          <h4>Webhook Events</h4>
+          <input id="webhook" placeholder="https://your-webhook" />
+          <input id="events" placeholder="All / Message,ReadReceipt" style="margin-top:6px" />
+          <button class="btn b" style="margin-top:6px;width:100%" onclick="saveWebhook()">Config</button>
+        </div>
+        <div class="box">
+          <h4>Message History</h4>
+          <input id="history" type="number" min="0" placeholder="0" />
+          <button class="btn b" style="margin-top:6px;width:100%" onclick="saveHistory()">Config</button>
+        </div>
+        <div class="box">
+          <h4>Proxy Settings</h4>
+          <input id="proxyUrl" placeholder="socks5://user:pass@host:port" />
+          <label class="muted"><input id="proxyOn" type="checkbox" style="width:auto"/> Enable Proxy</label>
+          <button class="btn b" style="margin-top:6px;width:100%" onclick="saveProxy()">Config</button>
+        </div>
+        <div class="box">
+          <h4>HMAC Key</h4>
+          <input id="hmac" placeholder="hmac secret" />
+          <button class="btn b" style="margin-top:6px;width:100%" onclick="saveHmac()">Config</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h4 style="margin:0 0 8px">Contacts & Groups Tools</h4>
+      <div class="grid">
+        <div class="box">
+          <h4>Contacts</h4>
+          <button class="btn b" style="width:100%" onclick="listContacts()">Get Contacts</button>
+        </div>
+        <div class="box">
+          <h4>Groups</h4>
+          <button class="btn b" style="width:100%" onclick="listGroups()">Get Groups</button>
+        </div>
+        <div class="box">
+          <h4>Join Group via Invite</h4>
+          <input id="inviteCode" placeholder="Invite code/link" />
+          <button class="btn b" style="margin-top:6px;width:100%" onclick="joinGroup()">Join Group</button>
+        </div>
+        <div class="box">
+          <h4>Create Group</h4>
+          <input id="groupSubject" placeholder="Group name" />
+          <input id="groupParticipants" placeholder="Participants comma-separated (62xxx,62yyy)" style="margin-top:6px" />
+          <button class="btn b" style="margin-top:6px;width:100%" onclick="createGroup()">Create Group</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+<script>
+const id = location.pathname.split('/').pop();
+const token = localStorage.getItem('waaza_token');
+const role = localStorage.getItem('waaza_role');
+if(!token || !role){ alert('Login dulu'); location.href='/dashboard'; }
+const isAdmin = role === 'admin';
+const H = isAdmin ? { 'Authorization': `Bearer ${token}`, 'Content-Type':'application/json' } : { 'X-API-Key': token, 'Content-Type':'application/json' };
+const base = (p) => isAdmin ? `/admin/instances/${id}${p}` : `/instances/me/${id}${p}`;
+const el = (x)=>document.getElementById(x);
+const log = (t)=>{ el('log').textContent = `[${new Date().toLocaleTimeString()}] ${t}\n` + el('log').textContent; }
+
+function showQR(qr){
+  const box = el('qrcode');
+  const img = qr?.qrcode_image || '';
+  if(!img){ box.innerHTML = '<span class="muted">QR belum tersedia. Klik Connect lalu Refresh QR.</span>'; return; }
+  box.innerHTML = `<img src="${img}" alt="QR" style="width:220px;height:220px;object-fit:contain"/>`;
+}
+
+async function load(){
+  const r = await fetch(base(''), { headers:H });
+  const j = await r.json();
+  if(!r.ok){ alert(j.error||'not found/forbidden'); location.href='/dashboard'; return; }
+  const i = j.data;
+  el('name').textContent = i.name || 'Instance';
+  el('meta').textContent = `JID: ${i.jid || '-'} | Webhook: ${i.webhook || 'not configured'}`;
+  el('connected').textContent = i.connected ? 'Connected' : 'Disconnected';
+  el('connected').className = `pill ${i.connected ? 'ok':'no'}`;
+  el('logged').textContent = i.logged_in ? 'Logged In' : 'Logged Out';
+  el('logged').className = `pill ${i.logged_in ? 'ok':'no'}`;
+
+  el('webhook').value = i.webhook || '';
+  el('events').value = (i.events || []).join(',');
+  el('history').value = i.history || 0;
+  el('proxyOn').checked = !!(i.proxy_config && i.proxy_config.enabled);
+  el('proxyUrl').value = (i.proxy_config && i.proxy_config.proxy_url) || '';
+  el('hmac').value = i.hmac_key || '';
+  await refreshQR();
+}
+
+async function refreshQR(){
+  const q = await fetch(base('/session/qr'), { headers:H });
+  const jq = await q.json();
+  showQR(jq?.data?.qr || null);
+}
+
+async function action(act){
+  const r = await fetch(base(`/session/${act}`), { method:'POST', headers:H });
+  const j = await r.json();
+  if(!r.ok){ alert(j.error||'failed'); return; }
+  if(act === 'connect') showQR(j?.data?.qr || null);
+  log(`${act} ok`);
+  await load();
+}
+
+async function get(path){
+  const r = await fetch(base(path), { headers:H });
+  const j = await r.json();
+  if(!r.ok){ alert(j.error||'failed'); return null; }
+  return j;
+}
+
+async function post(path, payload){
+  const r = await fetch(base(path), { method:'POST', headers:H, body:JSON.stringify(payload) });
+  const j = await r.json();
+  if(!r.ok){ alert(j.error||'failed'); return null; }
+  return j;
+}
+
+
+async function listContacts(){
+  const j = await get('/contacts');
+  if(j) log('contacts loaded: '+(j?.data?.length ?? 0));
+}
+async function listGroups(){
+  const j = await get('/groups');
+  if(j) log('groups loaded: '+(j?.data?.length ?? 0));
+}
+async function joinGroup(){
+  const invite = el('inviteCode').value.trim();
+  if(!invite){ alert('Invite wajib diisi'); return; }
+  const j = await post('/groups/join', { invite });
+  if(j) log('join queued');
+}
+async function createGroup(){
+  const subject = el('groupSubject').value.trim();
+  const participants = el('groupParticipants').value.split(',').map(x=>x.trim()).filter(Boolean);
+  if(!subject){ alert('Group subject wajib diisi'); return; }
+  const j = await post('/groups/create', { subject, participants });
+  if(j) log('create queued');
+}
+
+async function sendText(){
+  const to = el('to').value.trim();
+  const message = el('msg').value.trim();
+  if(!to || !message){ alert('Nomor dan pesan wajib diisi'); return; }
+  const path = isAdmin ? '/chat/send/text' : '/chat/send/text';
+  const j = await post(path, { phone: to, message });
+  if(j) log(`send ok: ${j?.data?.message_id || '-'}`);
+}
+
+async function saveWebhook(){ const j = await post('/config/webhook', { webhook:el('webhook').value, events:el('events').value.split(',').map(x=>x.trim()).filter(Boolean), active:true}); if(j) log('config webhook updated'); }
+async function saveHistory(){ const j = await post('/config/history', { history:parseInt(el('history').value||'0',10)}); if(j) log('history updated'); }
+async function saveProxy(){ const j = await post('/config/proxy', { enabled:el('proxyOn').checked, proxy_url:el('proxyUrl').value}); if(j) log('proxy updated'); }
+async function saveHmac(){ const j = await post('/config/hmac', { hmac_key:el('hmac').value}); if(j) log('hmac updated'); }
+
+load();
+</script>
+</body>
+</html>
